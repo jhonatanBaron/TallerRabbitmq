@@ -1,0 +1,126 @@
+
+
+services:
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+    networks:
+      - web
+  
+  analitica:
+    build: ./analitica
+    container_name: analitica
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.analitica.rule=Host(`localhost`) && PathPrefix(`/reporte`)"
+      - "traefik.http.routers.analitica.entrypoints=web"
+      # Basic Auth middleware: user 'admin' with password 'password'
+      - "traefik.http.middlewares.analitica-basicauth.basicauth.users=admin:$$2a$$12$$TQl9hzq3VhMyVU8TBeI6hOd81GpQDHFOcWEAYlBIawA9G5vatdQHO"
+      - "traefik.http.routers.analitica.middlewares=analitica-basicauth"
+      - "traefik.http.services.analitica.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+  cliente-app1:
+    build: ./cliente-app
+    container_name: cliente-app1
+    environment:
+      - CLIENT_ID=app1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cliente-app1.rule=Host(`localhost`) && PathPrefix(`/cliente/app1`)"
+      - "traefik.http.routers.cliente-app1.entrypoints=web"
+      - "traefik.http.middlewares.cliente-app1-strip.stripprefix.prefixes=/cliente/app1"
+      - "traefik.http.routers.cliente-app1.middlewares=cliente-app1-strip"
+      - "traefik.http.services.cliente-app1.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+  cliente-app2:
+    build: ./cliente-app
+    container_name: cliente-app2
+    environment:
+      - CLIENT_ID=app2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cliente-app2.rule=Host(`localhost`) && PathPrefix(`/cliente/app2`)"
+      - "traefik.http.routers.cliente-app2.entrypoints=web"
+      - "traefik.http.middlewares.cliente-app2-strip.stripprefix.prefixes=/cliente/app2"
+      - "traefik.http.routers.cliente-app2.middlewares=cliente-app2-strip"
+      - "traefik.http.services.cliente-app2.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+  cliente-app3:
+    build: ./cliente-app
+    container_name: cliente-app3
+    environment:
+      - CLIENT_ID=app3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cliente-app3.rule=Host(`localhost`) && PathPrefix(`/cliente/app3`)"
+      - "traefik.http.routers.cliente-app3.entrypoints=web"
+      - "traefik.http.middlewares.cliente-app3-strip.stripprefix.prefixes=/cliente/app3"
+      - "traefik.http.routers.cliente-app3.middlewares=cliente-app3-strip"
+      - "traefik.http.services.cliente-app3.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+ # node-application:
+  #  build: .
+   # container_name: node-application
+    #ports:
+     # - "9000:3008"
+    #restart: always
+    #labels:
+     # - "traefik.enable=true"
+      #- "traefik.http.routers.node-application.rule=Host(`localhost`) && PathPrefix(`/node`)"
+      #- "traefik.http.routers.node-application.entrypoints=web"
+      #- "traefik.http.middlewares.node-application-strip.stripprefix.prefixes=/node"
+      #- "traefik.http.routers.node-application.middlewares=node-application-strip"
+      #- "traefik.http.services.node-application.loadbalancer.server.port=3008"
+    #networks:
+     # - web
+
+  panel_visual:
+    image: nginx:alpine
+    container_name: panel_visual
+    volumes:
+      - ./panel_visual/index.html:/usr/share/nginx/html/index.html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.panel_visual.rule=Host(`localhost`) && PathPrefix(`/panel_visual`)"
+      - "traefik.http.routers.panel_visual.entrypoints=web"
+      - "traefik.http.middlewares.panel_visual-strip.stripprefix.prefixes=/panel_visual"
+      - "traefik.http.routers.panel_visual.middlewares=panel_visual-strip"
+      - "traefik.http.services.panel_visual.loadbalancer.server.port=80"
+    networks:
+      - web
+  logger-central:
+      image: nginx:alpine
+      container_name: logger-central
+      volumes:
+        - ./logger-central/index.html:/usr/share/nginx/html/index.html:ro
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.logger-central.rule=Host(`localhost`) && PathPrefix(`/logger-central`)"
+        - "traefik.http.routers.logger-central.entrypoints=web"
+        - "traefik.http.middlewares.logger-central-strip.stripprefix.prefixes=/logger-central"
+        - "traefik.http.routers.logger-central.middlewares=panel_visual-strip"
+        - "traefik.http.services.logger-central.loadbalancer.server.port=80"
+      networks:
+        - web
+
+networks:
+  web:
+    driver: bridge
