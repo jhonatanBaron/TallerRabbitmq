@@ -120,7 +120,22 @@ services:
         - "traefik.http.services.logger-central.loadbalancer.server.port=80"
       networks:
         - web
+  ##usamos la imagen de rabbit 3-management para tener la interfaz web
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # 5762 es el puerto de RabbitMQ y  15672 es el puerto de la interfaz web
+      - "15672:15672"   
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - rabbitmq_net   
 
 networks:
   web:
+    driver: bridge
+
+  rabbitmq_net:
     driver: bridge

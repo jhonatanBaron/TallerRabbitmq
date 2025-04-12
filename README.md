@@ -1,4 +1,12 @@
 
+### Integrantes
+**Santiago Vargas
+**JHonatan Baron
+
+
+
+
+
 ### ⚓ Los servicios 
 
 **analitica  hace refewrencia a "servicio analiticas"
@@ -20,7 +28,7 @@ logger-central
 Primero, baja al puerto del proyecto:
 
 ```bash
-cd PARCIAL2
+cd TallerRAbbitmq
 ```
 
 Luego, ordena levantar los servicios con:
